@@ -20,7 +20,7 @@ const DeleteTodoModal: FC<Props> = ({ todo, deleteTodoItem, onClose }) => {
       <div className="bg-white p-6 rounded shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Delete Todo</h2>
         <p className="mb-4">
-          Are you sure you want to delete the todo "{todo.text}"?
+          Are you sure you want to delete the todo &quot;{todo.text}&quot;?
         </p>
         <div className="flex justify-end gap-2">
           <button

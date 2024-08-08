@@ -1,5 +1,5 @@
 "use client";
-import { ChangeEvent, FC, useState, useEffect } from "react";
+import { ChangeEvent, FC, useState, useEffect, useCallback } from "react";
 
 interface Props {
   createTodo: (value: string) => void;
@@ -15,21 +15,17 @@ const AddTodoModal: FC<Props> = ({ createTodo, onClose }) => {
     setInput(e.target.value);
   };
 
-  // Event handler for adding a new todo and closing the modal
-  const handleAdd = () => {
-    if (input.trim()) {
-      createTodo(input);
-      setInput("");
-      onClose();
-    }
-  };
-
   // Handle the "Enter" key press for adding a todo
-  const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleAdd();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Enter" && input.trim()) {
+        createTodo(input);
+        setInput("");
+        onClose();
+      }
+    },
+    [input, createTodo, onClose]
+  );
 
   // Attach and clean up the key press event listener
   useEffect(() => {
@@ -37,7 +33,7 @@ const AddTodoModal: FC<Props> = ({ createTodo, onClose }) => {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [input]);
+  }, [handleKeyPress]);
 
   // Rendering the AddTodoModal component
   return (
@@ -55,7 +51,7 @@ const AddTodoModal: FC<Props> = ({ createTodo, onClose }) => {
           {/* Button for adding a new todo and closing the modal */}
           <button
             className="flex items-center justify-center bg-green-600 text-green-50 rounded px-2 h-9 w-14 py-1"
-            onClick={handleAdd}
+            onClick={handleKeyPress as any}
           >
             Add
           </button>
