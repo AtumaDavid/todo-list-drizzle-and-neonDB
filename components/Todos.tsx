@@ -2,7 +2,9 @@
 import { FC, useState } from "react";
 import { todoType } from "@/types/todoTypes";
 import Todo from "@/components/Todo";
-import AddTodo from "@/components/AddTodo";
+import AddTodoModal from "@/components/AddTodoModal";
+import DeleteTodoModal from "@/components/DeleteTodoModal";
+import EditTodoModal from "@/components/EditTodoModal";
 import {
   addTodo,
   deleteTodo,
@@ -15,46 +17,64 @@ interface Props {
 }
 
 const Todos: FC<Props> = ({ todos }) => {
-  // State to manage the list of todo items
   const [todoItems, setTodoItems] = useState<todoType[]>(todos);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedTodo, setSelectedTodo] = useState<todoType | null>(null);
 
-  // Function to create a new todo item
-  const createTodo = (text: string) => {
-    const id = (todoItems.at(-1)?.id || 0) + 1;
-    addTodo(id, text);
-    setTodoItems((prev) => [...prev, { id: id, text, done: false }]);
+  const createTodo = async (text: string) => {
+    try {
+      const id = (todoItems.at(-1)?.id || 0) + 1;
+      await addTodo(id, text);
+      setTodoItems((prev) => [...prev, { id, text, done: false }]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Failed to create todo", error);
+    }
   };
 
-  // Function to change the text of a todo item
-  const changeTodoText = (id: number, text: string) => {
-    setTodoItems((prev) =>
-      prev.map((todo) => (todo.id === id ? { ...todo, text } : todo))
-    );
-    editTodo(id, text);
+  const changeTodoText = async (id: number, text: string) => {
+    try {
+      await editTodo(id, text);
+      setTodoItems((prev) =>
+        prev.map((todo) => (todo.id === id ? { ...todo, text } : todo))
+      );
+      setShowEditModal(false);
+      setSelectedTodo(null);
+    } catch (error) {
+      console.error("Failed to update todo", error);
+    }
   };
 
-  // Function to toggle the "done" status of a todo item
-  const toggleIsTodoDone = (id: number) => {
-    setTodoItems((prev) =>
-      prev.map((todo) =>
-        todo.id === id ? { ...todo, done: !todo.done } : todo
-      )
-    );
-    toggleTodo(id);
+  const toggleIsTodoDone = async (id: number) => {
+    try {
+      await toggleTodo(id);
+      setTodoItems((prev) =>
+        prev.map((todo) =>
+          todo.id === id ? { ...todo, done: !todo.done } : todo
+        )
+      );
+    } catch (error) {
+      console.error("Failed to toggle todo", error);
+    }
   };
 
-  // Function to delete a todo item
-  const deleteTodoItem = (id: number) => {
-    setTodoItems((prev) => prev.filter((todo) => todo.id !== id));
-    deleteTodo(id);
+  const deleteTodoItem = async (id: number) => {
+    try {
+      await deleteTodo(id);
+      setTodoItems((prev) => prev.filter((todo) => todo.id !== id));
+      setShowDeleteModal(false);
+      setSelectedTodo(null);
+    } catch (error) {
+      console.error("Failed to delete todo", error);
+    }
   };
 
-  // Rendering the Todo List component
   return (
     <main className="flex mx-auto max-w-xl w-full min-h-screen flex-col items-center p-16">
       <div className="text-5xl font-medium">To-do app</div>
       <div className="w-full flex flex-col mt-8 gap-2">
-        {/* Mapping through todoItems and rendering Todo component for each */}
         {todoItems.map((todo) => (
           <Todo
             key={todo.id}
@@ -65,8 +85,38 @@ const Todos: FC<Props> = ({ todos }) => {
           />
         ))}
       </div>
-      {/* Adding Todo component for creating new todos */}
-      <AddTodo createTodo={createTodo} />
+      {showAddModal && (
+        <AddTodoModal
+          createTodo={createTodo}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+      {showDeleteModal && selectedTodo && (
+        <DeleteTodoModal
+          todo={selectedTodo}
+          deleteTodoItem={deleteTodoItem}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedTodo(null);
+          }}
+        />
+      )}
+      {showEditModal && selectedTodo && (
+        <EditTodoModal
+          todo={selectedTodo}
+          changeTodoText={changeTodoText}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedTodo(null);
+          }}
+        />
+      )}
+      <button
+        className="flex items-center justify-center bg-green-600 text-green-50 rounded px-2 h-9 w-14 py-1 mt-4"
+        onClick={() => setShowAddModal(true)}
+      >
+        Add
+      </button>
     </main>
   );
 };
